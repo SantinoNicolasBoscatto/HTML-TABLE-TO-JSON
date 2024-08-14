@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<center>
+<br/><br/><br/>
+<input type="file" id="fileInput">
+<br/><br/><br/>
+</center>
+<table id="myTable"></table>
+<script>
+	function tableToJson(table) {
+		var data = [];
+		var headers = [];
+		for (var i = 0; i < table.rows[0].cells.length; i++) {
+			headers[i] = table.rows[0].cells[i].innerHTML.toLowerCase().replace(/ /gi, '');
+		}
+		for (var i = 1; i < table.rows.length; i++) {
+			var tableRow = table.rows[i];
+			var rowData = {};
+			for (var j = 0; j < tableRow.cells.length; j++) {
+			rowData[headers[j]] = tableRow.cells[j].innerHTML;
+			}
+			data.push(rowData);
+		}
+		return data;
+	}
+	function reemplazarCaracteresEspeciales(json) {
+	return JSON.parse(json, (key, value) => {
+		if (typeof value === 'string') {
+		return value.replace(/\n/g, '').replace(/\t/g, '').replace(/↵/g, '');
+		}
+		return value;
+	});
+	}
+	const downloadFile = function (data, fileType, fileName = '') {
+		const a = document.createElement('a');
+		a.download = fileName;
+		const mime_types = {
+			json: 'application/json',
+		};
+		const jsonLimpio = JSON.stringify(reemplazarCaracteresEspeciales(data), null, 2); // Indentación de 2 espacios
+		a.href = `data:${mime_types[fileType]};charset=utf-8,${encodeURIComponent(jsonLimpio)}`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+	};
+	document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+	function handleFileSelect(event) {
+		const file = event.target.files[0];
+		const reader = new FileReader();
+
+		reader.onload = function (e) {
+		const htmlContent = e.target.result;
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(htmlContent, 'text/html');
+		const table = doc.querySelector('table'); // Selecciona la primera tabla del HTML
+		let originalJSON = JSON.stringify(tableToJson(table)).replace(/\\n\\t/g, '').replace(/\\n/g, '');
+		downloadFile(originalJSON,'json', 'RaceResult');
+		};
+		
+		reader.readAsText(file);
+	}
+</script>
+</body>
+</html>
