@@ -11,6 +11,7 @@
 <input type="file" id="fileInput">
 <br/><br/><br/>
 </center>
+<img src="" id="MyIMG"/>
 <table id="myTable"></table>
 <script>
 	function tableToJson(table) {
@@ -42,13 +43,31 @@
 		return value;
 	});
 	}
+
+	function actualizarPuntos(lista) {
+	let pointsDescending = 35;
+  	lista.forEach((elemento) => {
+		const Posicion = parseInt(elemento.Finish)
+		let nuevosPuntos = 1;	
+		if(Posicion === 1) nuevosPuntos = 40	
+		else if(Posicion<36) 
+		{
+			nuevosPuntos = pointsDescending;
+			pointsDescending -= 1;
+		}
+		elemento.Puntos = nuevosPuntos.toString();
+	});
+		return lista;
+	}
+
 	const downloadFile = function (data, fileType, fileName = '') {
 		const a = document.createElement('a');
 		a.download = fileName;
 		const mime_types = {
 			json: 'application/json',
 		};
-		const jsonLimpio = JSON.stringify(reemplazarCaracteresEspeciales(data), null, 2); // Indentación de 2 espacios
+		const jsonPuntos = JSON.stringify(actualizarPuntos(JSON.parse(data), null, 2))
+		const jsonLimpio = JSON.stringify(reemplazarCaracteresEspeciales(jsonPuntos), null, 2); // Indentación de 2 espacios
 		a.href = `data:${mime_types[fileType]};charset=utf-8,${encodeURIComponent(jsonLimpio)}`;
 		document.body.appendChild(a);
 		a.click();
@@ -58,6 +77,7 @@
 	document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 	function handleFileSelect(event) {
 		const file = event.target.files[0];
+		const fileName = file.name.substring(0, file.name.lastIndexOf('.'));
 		const reader = new FileReader();
 
 		reader.onload = function (e) {
@@ -66,12 +86,24 @@
 		const doc = parser.parseFromString(htmlContent, 'text/html');
 		const table = doc.querySelector('table'); // Selecciona la primera tabla del HTML
 		let originalJSON = JSON.stringify(tableToJson(table)).replace(/\\n\\t/g, '').replace(/\\n/g, '');
-		downloadFile(originalJSON,'json', 'RaceResult');
+		downloadFile(originalJSON,'json', fileName);
 		};
 		
 		reader.readAsText(file);
 	}
 </script>
+<!-- <script>
+	let img = document.getElementById("MyIMG");
+fetch('https://localhost:7290/api/pilotos')
+  .then(response => response.json())
+  .then(data => {
+	img.setAttribute("src", data[0].fotoPiloto)
+    console.log(data[0].fotoPiloto);
+  })
+  .catch(error => {
+	alert()
+    console.error('Error al obtener los datos:', error);
+  });
+</script> -->
 </body>
 </html>
-
